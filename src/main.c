@@ -1,22 +1,28 @@
 /*
- * HandyGraphicを利用して動画編集ができるアプリケーションを作成する
- * mp4拡張子の動画ファイルに対して、再生、編集、出力ができることを目標とする
- * 2023/12/07 Kawa0x5F
+ * HandyGraphicを利用して動画の再生ができるアプリケーションを作成する
+ * mp4拡張子の動画ファイルに対して、再生ができることを目標とする
+ * 2023/12/15 Kawa0x5F
  */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <handy.h>
 
 #include "videoInput.h"
 
 #define WID_WIDTH_SIZE 100
 #define WID_HEIGHT_SIZE 100
+#define STREAM_FRAME_NUM 200
 
 int main() {
     char* videoPath = NULL;
     int frameIndex = 0;
+    double transIntToDouble[256];
+
+    // 0~255の整数を0~1の小数に変換するための配列を作成
+    for(int i = 0; i < 256; i++) {
+        transIntToDouble[i] = (double)i / 255;
+    }
 
     // ピクセルデータ格納用の構造体
     PixFrameData pixCtx;
@@ -24,27 +30,34 @@ int main() {
     // 動画のパスを受け取る
     videoPath = GetVideoPath();
 
-    // 受け取ったパス先の動画からRBGのピクセルデータを取得
-    printf("動画の読み込み中...\n");
-    VideoToBit(&pixCtx,videoPath,WID_WIDTH_SIZE,WID_HEIGHT_SIZE);
+    // 動画の情報を取得するための変数を初期化する
+    InitInputVariable(videoPath,WID_WIDTH_SIZE,WID_HEIGHT_SIZE);
+    printf("初期化しました");
 
-    printf("動画の再生準備中...\n");
-    for(int i=0; i < pixCtx.numFrames; i++){
-        qsort(pixCtx.pix[i],WID_WIDTH_SIZE*WID_HEIGHT_SIZE,sizeof(RGB*),Compare);
+    // pixCtxのメモリを確保する
+    pixCtx.pix = (RGB**) malloc(STREAM_FRAME_NUM * sizeof(RGB*));
+    for(int i = 0; i < STREAM_FRAME_NUM; i++) {
+        pixCtx.pix[i] = (RGB *) malloc((WID_WIDTH_SIZE * WID_HEIGHT_SIZE) * sizeof(RGB));
     }
 
-    printf("完了\n");
 
     HgOpen(WID_WIDTH_SIZE, WID_HEIGHT_SIZE);
     HgSetTitle("HandyVideo")
 
-    printf("%lld\n", pixCtx.numFrames);
     printf("EnterKeyを押すと動画の再生を開始します。\n");
     getchar();
     // ビットマップをHandyGraphicで描画する
-    while (pixCtx.numFrames >= frameIndex) {
-        //getchar();
+    while (1) {
+        printf("あらら\n");
+        // フレームごとのRGBピクセルデータを取得する
+        if(GetFrameData(&pixCtx,frameIndex, STREAM_FRAME_NUM) == -1)break;
+        printf("あらら2\n");
+        if(frameIndex >= 1)
+            qsort(pixCtx.pix[frameIndex],WID_WIDTH_SIZE*WID_HEIGHT_SIZE,sizeof(RGB*),Compare);
+        printf("あらら3\n");
+//        getchar();
         for (int i = 0; i < WID_HEIGHT_SIZE*WID_WIDTH_SIZE; i++) {
+            printf("main %d %d %d\n", pixCtx.pix[frameIndex][i].r, pixCtx.pix[frameIndex][i].g, pixCtx.pix[frameIndex][i].b);
             if(frameIndex > 0 && pixCtx.pix[frameIndex][i].diff == '0') {
                 continue;
             }else {
@@ -52,23 +65,24 @@ int main() {
                     pixCtx.pix[frameIndex][i].g != pixCtx.pix[frameIndex][i - 1].g &&
                     pixCtx.pix[frameIndex][i].b != pixCtx.pix[frameIndex][i - 1].b) {
                     // RGBでピクセルデータのセットをする
-                    HgSetFillColor(HgRGB(pixCtx.pix[frameIndex][i].r,
-                                         pixCtx.pix[frameIndex][i].g,
-                                         pixCtx.pix[frameIndex][i].b));
+                    HgSetFillColor(HgRGB(transIntToDouble[pixCtx.pix[frameIndex][i].r],
+                                         transIntToDouble[pixCtx.pix[frameIndex][i].g],
+                                         transIntToDouble[pixCtx.pix[frameIndex][i].b]));
                 }
             }
             // 大きさ1 1 の塗りつぶされたボックスを描画する
             HgBoxFill(pixCtx.pix[frameIndex][i].x,pixCtx.pix[frameIndex][i].y,1,1,0);
             // 描画の位置を少しずつ変える
-            // 描画のために1ms時間を止める
         }
+        printf("あらら4\n");
+        if(frameIndex >= 100)break;
+        printf("あらら5\n");
         frameIndex++;
+        // 描画のために1ms時間を止める
         HgSleep(0.1);
-//        if(frameIndex > 100){
-//            break;
-//        }
     }
-    HgGetChar();
+
+//    HgGetChar();
     HgCloseAll();
 
     printf("終了処理をしています。そのままで待ってください\n");
@@ -77,7 +91,7 @@ int main() {
     free(videoPath);
 
     // pixCtxのメモリを解放する
-    for(int i = 0; i < pixCtx.numFrames; i++) {
+    for(int i = 0; i < STREAM_FRAME_NUM; i++) {
         free(pixCtx.pix[i]);
     }
     free(pixCtx.pix);

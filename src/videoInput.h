@@ -1,8 +1,8 @@
 // RGBピクセルデータの格納用
 typedef struct {
-    double r; // 赤成分
-    double g; // 緑成分
-    double b; // 青成分
+    int r; // 赤成分
+    int g; // 緑成分
+    int b; // 青成分
     char diff; // 前フレームと色が違うかどうか 0:同じ 1:違う
     int y; // y座標
     int x; // x座標
@@ -15,6 +15,10 @@ typedef struct {
 }PixFrameData;
 
 char* GetVideoPath();
+
+void InitInputVariable(char *videoPath, int outWidth, int outHeight);
+
+int GetFrameData(PixFrameData *pixCtx, int reqFrameIndex, int streamFrame);
 
 void VideoToBit(PixFrameData *pixCtx,char* videoPath,int width,int height);
 
