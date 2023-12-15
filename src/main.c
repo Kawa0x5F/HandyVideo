@@ -10,9 +10,9 @@
 
 #include "videoInput.h"
 
-#define WID_WIDTH_SIZE 700
-#define WID_HEIGHT_SIZE 350
-#define STREAM_FRAME_NUM 200
+#define WID_WIDTH_SIZE 100
+#define WID_HEIGHT_SIZE 100
+#define STREAM_FRAME_NUM 20
 
 int main() {
     char* videoPath = NULL;
@@ -35,8 +35,8 @@ int main() {
     printf("初期化しました");
 
     // pixCtxのメモリを確保する
-    pixCtx.pix = (RGB**) malloc(STREAM_FRAME_NUM * sizeof(RGB*));
-    for(int i = 0; i < STREAM_FRAME_NUM; i++) {
+    pixCtx.pix = (RGB**) malloc((STREAM_FRAME_NUM + 1) * sizeof(RGB*));
+    for(int i = 0; i < (STREAM_FRAME_NUM + 1); i++) {
         pixCtx.pix[i] = (RGB *) malloc((WID_WIDTH_SIZE * WID_HEIGHT_SIZE) * sizeof(RGB));
     }
 
