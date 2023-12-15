@@ -20,6 +20,6 @@ void InitInputVariable(char *videoPath, int outWidth, int outHeight);
 
 int GetFrameData(PixFrameData *pixCtx, int reqFrameIndex, int streamFrame);
 
-void VideoToBit(PixFrameData *pixCtx,char* videoPath,int width,int height);
+void FreeInputVariable();
 
 int Compare(const void *rgb1, const void *rgb2);
