@@ -1,6 +1,6 @@
 /*
  * 動画ファイルの受け取り関係の処理をする
- * 2023/12/15 Kawa0x5F
+ * 2023/01/10 Kawa_
  */
 
 #include <stdio.h>
@@ -206,6 +206,7 @@ int GetFrameData(PixFrameData *pixCtx, int reqFrameIndex, int streamFrame){
                 int rgbLineSize = outFrame->linesize[0]; // RGBプレーンの１行あたりのバイト数
                 // RGBプレーンを操作してピクセルデータを処理する
                 int nowFrameIndex = reqFrameIndex % streamFrame;
+                int beforeFrameIndex = (nowFrameIndex - 1) % streamFrame;
                 for (int y = 0; y < outHeight; y++) {
                     for (int x = 0; x < outWidth; x++) {
                         uint8_t r = rgbData[y * rgbLineSize + x * 3]; // (x,y)座標の赤成分
@@ -218,11 +219,11 @@ int GetFrameData(PixFrameData *pixCtx, int reqFrameIndex, int streamFrame){
                             pixCtx->pix[reqFrameIndex][(y * outWidth) + x].diff = '1';
                         } else {
                             if (pixCtx->pix[nowFrameIndex][(y * outWidth) + x].r ==
-                                pixCtx->pix[nowFrameIndex - 1][(y * outWidth) + x].r &&
+                                pixCtx->pix[beforeFrameIndex][(y * outWidth) + x].r &&
                                 pixCtx->pix[nowFrameIndex][(y * outWidth) + x].g ==
-                                pixCtx->pix[nowFrameIndex - 1][(y * outWidth) + x].g &&
+                                pixCtx->pix[beforeFrameIndex][(y * outWidth) + x].g &&
                                 pixCtx->pix[nowFrameIndex][(y * outWidth) + x].b ==
-                                pixCtx->pix[nowFrameIndex - 1][(y * outWidth) + x].b) {
+                                pixCtx->pix[beforeFrameIndex][(y * outWidth) + x].b) {
                                 pixCtx->pix[nowFrameIndex][(y * outWidth) + x].diff = '0';
                             } else {
                                 pixCtx->pix[nowFrameIndex][(y * outWidth) + x].diff = '1';

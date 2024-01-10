@@ -1,7 +1,6 @@
 /*
- * HandyGraphicを利用して動画の再生ができるアプリケーションを作成する
- * mp4拡張子の動画ファイルに対して、再生ができることを目標とする
- * 2023/12/15 Kawa0x5F
+ * HnadyGraphicで動画を再生するプログラム
+ * 2024/01/10 Kawa_
  */
 
 #include <stdio.h>
@@ -15,9 +14,12 @@
 #define STREAM_FRAME_NUM 20
 
 int main() {
+    /* 変数の宣言 */
     char* videoPath = NULL;
     int frameIndex = 0;
     double transIntToDouble[256];
+    doubleLayer doubleLayerId; // ダブルレイヤ変数の宣言
+
 
     // 0~255の整数を0~1の小数に変換するための配列を作成
     for(int i = 0; i < 256; i++) {
@@ -40,14 +42,20 @@ int main() {
         pixCtx.pix[i] = (RGB *) malloc((WID_WIDTH_SIZE * WID_HEIGHT_SIZE) * sizeof(RGB));
     }
 
+    // ウィンドウを開く
     HgOpen(WID_WIDTH_SIZE, WID_HEIGHT_SIZE);
     HgSetTitle("HandyVideo")
 
+    // ダブルレイヤを作成する
+    doubleLayerId = HgWAddDoubleLayer(0);
+
     printf("EnterKeyを押すと動画の再生を開始します。\n");
-//    getchar();
     // ビットマップをHandyGraphicで描画する
     while (1) {
-        printf("frameIndex = %d \n", frameIndex);
+        // レイヤ処理
+        int layerId = HgLSwitch(&doubleLayerId);
+        HgLClear(layerId); // レイヤの描画を削除する
+
         // フレームごとのRGBピクセルデータを取得する
         if(GetFrameData(&pixCtx,frameIndex, STREAM_FRAME_NUM) == -1){
             printf("動画の読み込みに失敗しました。\n");
@@ -57,29 +65,24 @@ int main() {
         if(frameIndex >= 1)
             qsort(pixCtx.pix[nowFrameIndex],WID_WIDTH_SIZE*WID_HEIGHT_SIZE,sizeof(RGB*),Compare);
         for (int i = 0; i < WID_HEIGHT_SIZE*WID_WIDTH_SIZE; i++) {
-            if(frameIndex > 0 && pixCtx.pix[nowFrameIndex][i].diff == '0') {
-                continue;
-            }else {
-                if (i > 0 && pixCtx.pix[nowFrameIndex][i].r != pixCtx.pix[nowFrameIndex][i - 1].r &&
-                    pixCtx.pix[nowFrameIndex][i].g != pixCtx.pix[nowFrameIndex][i - 1].g &&
-                    pixCtx.pix[nowFrameIndex][i].b != pixCtx.pix[nowFrameIndex][i - 1].b) {
-                    // RGBでピクセルデータのセットをする
-                    HgSetFillColor(HgRGB(transIntToDouble[pixCtx.pix[nowFrameIndex][i].r],
-                                         transIntToDouble[pixCtx.pix[nowFrameIndex][i].g],
-                                         transIntToDouble[pixCtx.pix[nowFrameIndex][i].b]));
-                }
+            if(frameIndex > 0 && pixCtx.pix[nowFrameIndex][i].diff == '0')continue;
+            if (i > 0 && pixCtx.pix[nowFrameIndex][i].r != pixCtx.pix[nowFrameIndex][i - 1].r &&
+                pixCtx.pix[nowFrameIndex][i].g != pixCtx.pix[nowFrameIndex][i - 1].g &&
+                pixCtx.pix[nowFrameIndex][i].b != pixCtx.pix[nowFrameIndex][i - 1].b) {
+                // RGBでピクセルデータのセットをする
+                HgWSetFillColor(layerId,HgRGB(transIntToDouble[pixCtx.pix[nowFrameIndex][i].r],
+                                     transIntToDouble[pixCtx.pix[nowFrameIndex][i].g],
+                                     transIntToDouble[pixCtx.pix[nowFrameIndex][i].b]));
             }
             // 大きさ1 1 の塗りつぶされたボックスを描画する
-            HgBoxFill(pixCtx.pix[nowFrameIndex][i].x,pixCtx.pix[nowFrameIndex][i].y,1,1,0);
-            // 描画の位置を少しずつ変える
+            HgWBoxFill(layerId,pixCtx.pix[nowFrameIndex][i].x,pixCtx.pix[nowFrameIndex][i].y,1,1,0);
         }
-//        if(frameIndex >= 100)break;
         frameIndex++;
         // 描画のために1ms時間を止める
         HgSleep(0.1);
     }
 
-//    HgGetChar();
+    // ウィンドウを閉じる
     HgCloseAll();
 
     printf("終了処理をしています。そのままで待ってください\n");
