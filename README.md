@@ -17,12 +17,11 @@ FFmpegのインストールが必要です。
 
 FFmpegは、以下の手順に従ってインストールしてください。
 
+## FFmpegのインストール
 ### Homebrew
-
 ```bash:bash
 $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
-
 インストールの詳細については[Homebrewの公式ページ（日本語）](https://brew.sh/ja/ "Homebrew")を参照してください。
 
 ### FFmpeg
